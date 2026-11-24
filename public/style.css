@@ -1,0 +1,311 @@
+:root {
+    --pozadi: #f4f2ee;
+    --karta: #ffffff;
+    --text: #1d1f22;
+    --tlumeny: #6b6f76;
+    --linka: #e3e0da;
+    --akcent: #1f5eff;
+    --akcent-tmavy: #1647c4;
+    --palivo: #2f9e62;
+    --malo: #d9822b;
+    --chyba: #c43c3c;
+    --radius: 12px;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    background: var(--pozadi);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+}
+
+.hlavicka {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 24px 24px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+}
+
+.podtitul {
+    margin: 4px 0 0;
+    color: var(--tlumeny);
+}
+
+.hlavicka-akce {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.kapacita {
+    color: var(--tlumeny);
+    font-variant-numeric: tabular-nums;
+}
+
+main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px 64px;
+}
+
+.prazdna {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--tlumeny);
+    border: 1px dashed var(--linka);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.seznam {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+/* ---------- Karta auta ---------- */
+
+.auto {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background: var(--karta);
+    border: 1px solid var(--linka);
+    border-radius: var(--radius);
+}
+
+.auto.na-vylete {
+    border-color: var(--akcent);
+    box-shadow: 0 0 0 1px var(--akcent);
+}
+
+.auto-hlava {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.auto-nazev {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.auto-barva {
+    margin: 2px 0 0;
+    color: var(--tlumeny);
+    font-size: 0.9rem;
+}
+
+.stitek-vylet {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--akcent);
+    background: #e8efff;
+    border-radius: 999px;
+}
+
+.auto-parametry {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    margin: 0;
+}
+
+.auto-parametry dt {
+    font-size: 0.75rem;
+    color: var(--tlumeny);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.auto-parametry dd {
+    margin: 2px 0 0;
+    font-size: 0.95rem;
+}
+
+.nadrz-popis {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+}
+
+.nadrz-stav { font-variant-numeric: tabular-nums; }
+
+.nadrz-ukazatel {
+    height: 10px;
+    background: var(--pozadi);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.nadrz-hladina {
+    height: 100%;
+    background: var(--palivo);
+    border-radius: 999px;
+    transition: width 0.5s ease;
+}
+
+.nadrz-hladina.malo { background: var(--malo); }
+
+.dojezd {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+    color: var(--tlumeny);
+}
+
+.akce {
+    display: flex;
+    gap: 8px;
+}
+
+.akce input { flex: 1; min-width: 0; }
+
+/* ---------- Formulářové prvky ---------- */
+
+input {
+    font: inherit;
+    padding: 9px 12px;
+    border: 1px solid var(--linka);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+}
+
+input:focus {
+    outline: 2px solid var(--akcent);
+    outline-offset: -1px;
+    border-color: transparent;
+}
+
+.btn {
+    font: inherit;
+    font-weight: 500;
+    padding: 9px 16px;
+    border: 1px solid var(--linka);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.btn:hover { background: var(--pozadi); }
+
+.btn-hlavni {
+    background: var(--akcent);
+    border-color: var(--akcent);
+    color: #fff;
+}
+
+.btn-hlavni:hover { background: var(--akcent-tmavy); }
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-odstranit {
+    align-self: flex-start;
+    padding: 0;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--tlumeny);
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-odstranit:hover {
+    color: var(--chyba);
+    text-decoration: underline;
+}
+
+/* ---------- Dialog ---------- */
+
+dialog {
+    width: min(560px, calc(100vw - 32px));
+    padding: 28px;
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+
+dialog::backdrop { background: rgba(20, 22, 26, 0.4); }
+
+dialog h2 { margin: 0 0 16px; }
+
+fieldset {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 0;
+    border: none;
+}
+
+legend {
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--tlumeny);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.85rem;
+}
+
+.chyba-formulare {
+    margin: 0 0 12px;
+    color: var(--chyba);
+}
+
+.dialog-akce {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* ---------- Zpráva dole ---------- */
+
+.zprava {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    padding: 12px 20px;
+    color: #fff;
+    background: var(--text);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.zprava.chyba { background: var(--chyba); }
+
+@media (max-width: 520px) {
+    fieldset { grid-template-columns: 1fr; }
+    .hlavicka { padding-top: 24px; }
+}

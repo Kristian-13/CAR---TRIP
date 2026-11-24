@@ -27,6 +27,10 @@ public class Garaz {
         return auta.get(index);
     }
 
+    public int getKapacita() {
+        return kapacita;
+    }
+
     public int getPocetAut() {
         return auta.size();
     }

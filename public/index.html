@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cesta autem</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="hlavicka">
+        <div>
+            <h1>Cesta autem</h1>
+            <p class="podtitul">Garáž, tankování a výlety</p>
+        </div>
+        <div class="hlavicka-akce">
+            <span id="kapacita" class="kapacita">0 / 5 míst</span>
+            <button id="btnPridat" class="btn btn-hlavni">+ Přidat auto</button>
+        </div>
+    </header>
+
+    <main>
+        <p id="prazdna" class="prazdna" hidden>
+            Garáž je prázdná. Přidej první auto tlačítkem <strong>+ Přidat auto</strong>.
+        </p>
+        <section id="seznam" class="seznam" aria-live="polite"></section>
+    </main>
+
+    <!-- Formulář pro přidání auta -->
+    <dialog id="dialogPridat">
+        <form id="formPridat" method="dialog">
+            <h2>Nové auto</h2>
+
+            <fieldset>
+                <legend>Karoserie</legend>
+                <label>Značka <input name="znacka" required maxlength="60" placeholder="Škoda"></label>
+                <label>Model <input name="model" required maxlength="60" placeholder="Octavia"></label>
+                <label>Barva <input name="barva" required maxlength="60" placeholder="modrá"></label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Motor a nádrž</legend>
+                <label>Název motoru <input name="motor" required maxlength="60" placeholder="2.0 TDI"></label>
+                <label>Spotřeba (l/100 km) <input name="spotreba" type="number" step="0.1" min="0.1" required placeholder="6.5"></label>
+                <label>Výkon (kW) <input name="vykon" type="number" step="1" min="1" required placeholder="110"></label>
+                <label>Objem nádrže (l) <input name="objem" type="number" step="1" min="1" required placeholder="50"></label>
+            </fieldset>
+
+            <fieldset>
+                <legend>Kola</legend>
+                <label>Velikost (palce) <input name="velikostKol" type="number" step="1" min="1" required placeholder="17"></label>
+                <label>Typ <input name="typKol" required maxlength="60" placeholder="letní"></label>
+                <label>Barva <input name="barvaKol" required maxlength="60" placeholder="stříbrná"></label>
+            </fieldset>
+
+            <p id="chybaFormulare" class="chyba-formulare" hidden></p>
+
+            <div class="dialog-akce">
+                <button type="button" id="btnZrusit" class="btn">Zrušit</button>
+                <button type="submit" class="btn btn-hlavni">Přidat do garáže</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="zprava" class="zprava" role="status" hidden></div>
+
+    <template id="sablonaAuta">
+        <article class="auto">
+            <div class="auto-hlava">
+                <div>
+                    <h3 class="auto-nazev"></h3>
+                    <p class="auto-barva"></p>
+                </div>
+                <span class="stitek-vylet" hidden>Na výletě</span>
+            </div>
+
+            <dl class="auto-parametry">
+                <div><dt>Motor</dt><dd class="p-motor"></dd></div>
+                <div><dt>Výkon</dt><dd class="p-vykon"></dd></div>
+                <div><dt>Spotřeba</dt><dd class="p-spotreba"></dd></div>
+                <div><dt>Kola</dt><dd class="p-kola"></dd></div>
+            </dl>
+
+            <div class="nadrz">
+                <div class="nadrz-popis">
+                    <span>Nádrž</span>
+                    <span class="nadrz-stav"></span>
+                </div>
+                <div class="nadrz-ukazatel"><div class="nadrz-hladina"></div></div>
+                <p class="dojezd"></p>
+            </div>
+
+            <form class="akce akce-tankovani">
+                <input name="litry" type="number" step="0.1" min="0.1" placeholder="litry" required aria-label="Kolik litrů natankovat">
+                <button class="btn">Natankovat</button>
+            </form>
+            <form class="akce akce-vylet">
+                <input name="km" type="number" step="1" min="1" placeholder="km" required aria-label="Vzdálenost výletu v km">
+                <button class="btn btn-hlavni">Vyjet na výlet</button>
+            </form>
+
+            <button class="btn-odstranit">Odstranit z garáže</button>
+        </article>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 # Cesta autem
 
-Konzolová aplikace v Javě, která simuluje garáž a jízdu autem. Školní projekt (PG, 2.D).
+Aplikace v Javě, která simuluje garáž a jízdu autem. Školní projekt (PG, 2.D).
+Běží buď v konzoli, nebo jako webová aplikace (Java backend + HTML/JS frontend).
 
 ## Co umí
 
@@ -18,8 +19,10 @@ Konzolová aplikace v Javě, která simuluje garáž a jízdu autem. Školní pr
 
 ```
 src/
-├── App.java              – vstupní bod programu
+├── App.java              – spuštění konzolové verze
+├── WebApp.java           – spuštění webové verze
 ├── UI/Menu.java          – textové menu a ovládání
+├── web/Server.java       – backend: HTTP server a REST API
 └── data/
     ├── Auto.java         – auto složené z dílů, výpočet dojezdu
     ├── Garaz.java        – seznam aut s omezenou kapacitou
@@ -28,15 +31,51 @@ src/
         ├── Kola.java
         ├── Motor.java    – název, spotřeba (l/100 km), výkon
         └── Nadrz.java    – objem a aktuální stav paliva
+public/
+├── index.html            – frontend: stránka
+├── style.css             – vzhled
+└── app.js                – volá API backendu a vykresluje garáž
 ```
+
+## Jak je propojený backend s frontendem
+
+```
+Prohlížeč (public/app.js)  ──fetch──▶  Java server (web/Server.java)  ──▶  Garaz, Auto, Nadrz…
+                           ◀──JSON──
+```
+
+Backend je napsaný jen ve standardní Javě (`com.sun.net.httpserver.HttpServer`), bez knihoven.
+Server posílá prohlížeči soubory ze složky `public` a na adresách `/api/...` nabízí API:
+
+| Metoda | Adresa                        | Co dělá                        |
+|--------|-------------------------------|--------------------------------|
+| GET    | `/api/garaz`                  | vrátí kapacitu a seznam aut    |
+| POST   | `/api/auta`                   | přidá auto                     |
+| DELETE | `/api/auta/{cislo}`           | odstraní auto                  |
+| POST   | `/api/auta/{cislo}/tankovani` | natankuje (parametr `litry`)   |
+| POST   | `/api/auta/{cislo}/vylet`     | vyjede na výlet (parametr `km`)|
+
+Chyby (např. „Auto nedojede“) vrací server jako `{"chyba": "..."}` a frontend je ukáže.
+Data jsou jen v paměti, takže po restartu serveru je garáž prázdná.
 
 ## Spuštění
 
 Potřebuješ **JDK 25** nebo novější (program používá třídu `java.lang.IO`).
+Příkazy spouštěj ve složce projektu (tam, kde je `src` a `public`).
+
+**Webová verze:**
 
 ```
-javac -encoding UTF-8 -d bin src/App.java src/UI/*.java src/data/*.java src/data/Dily/*.java
+javac -encoding UTF-8 -d bin src/*.java src/web/*.java src/UI/*.java src/data/*.java src/data/Dily/*.java
+java -cp bin WebApp
+```
+
+Pak otevři v prohlížeči http://localhost:8080
+
+**Konzolová verze:**
+
+```
 java -cp bin App
 ```
 
-Nebo otevři složku ve VS Code s rozšířením *Extension Pack for Java* a klikni na **Run** u `App.java`.
+Ve VS Code s rozšířením *Extension Pack for Java* stačí kliknout na **Run** u `WebApp.java` nebo `App.java`.
