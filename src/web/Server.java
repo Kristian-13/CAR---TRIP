@@ -12,7 +12,9 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -26,15 +28,27 @@ import java.util.Map;
  *
  * Logika (Garaz, Auto, Nadrz...) je stejná jako v konzolové verzi,
  * mění se jen to, že místo IO.readln() přichází data z prohlížeče.
+ *
+ * Garáž se po každé změně uloží do textového souboru, takže
+ * po restartu serveru auta nezmizí.
  */
 public class Server {
     private final HttpServer http;
     private final Path slozkaFrontendu;
+    private final Path souborGaraze;
     private final Garaz garaz = new Garaz(5);
     private Auto autoNaVylete;
 
-    public Server(int port, String slozkaFrontendu) throws IOException {
+    /** Jeden záznam v deníku jízd. */
+    private record Jizda(String auto, String cil, double km, double litry) {
+    }
+
+    private final List<Jizda> denik = new ArrayList<>(); // nejnovější jízda je první
+
+    public Server(int port, String slozkaFrontendu, String souborGaraze) throws IOException {
         this.slozkaFrontendu = Path.of(slozkaFrontendu).toAbsolutePath().normalize();
+        this.souborGaraze = Path.of(souborGaraze);
+        nactiGaraz();
         this.http = HttpServer.create(new InetSocketAddress(port), 0);
         http.createContext("/api/", this::obsluzApi);
         http.createContext("/", this::obsluzSoubor);
@@ -50,7 +64,9 @@ public class Server {
     //  POST   /api/auta                   – přidat auto
     //  DELETE /api/auta/{cislo}           – odstranit auto
     //  POST   /api/auta/{cislo}/tankovani – natankovat (parametr litry)
-    //  POST   /api/auta/{cislo}/vylet     – vyjet na výlet (parametr km)
+    //  POST   /api/auta/{cislo}/vylet     – vyjet na výlet (parametry km, cil)
+    //
+    //  Každá odpověď vrací celý nový stav garáže, frontend ho jen vykreslí.
 
     private void obsluzApi(HttpExchange ex) throws IOException {
         try {
@@ -105,6 +121,7 @@ public class Server {
             posliChybu(ex, 409, "Garáž je plná.");
             return;
         }
+        ulozGaraz();
         posliJson(ex, 201, stavGaraze());
     }
 
@@ -113,6 +130,7 @@ public class Server {
             autoNaVylete = null;
         }
         garaz.odeberAuto(index);
+        ulozGaraz();
         posliJson(ex, 200, stavGaraze());
     }
 
@@ -124,19 +142,32 @@ public class Server {
             return;
         }
         nadrz.natankuj(litry);
+        ulozGaraz();
         posliJson(ex, 200, stavGaraze());
     }
 
     private void vyjedNaVylet(HttpExchange ex, int index) throws IOException {
         Auto auto = garaz.getAuto(index);
-        double km = kladneCislo(nactiParametry(ex), "km", "Vzdálenost");
+        Map<String, String> p = nactiParametry(ex);
+        double km = kladneCislo(p, "km", "Vzdálenost");
+        String cil = p.getOrDefault("cil", "").replaceAll("[\\t\\r\\n]", " ").trim();
+        if (cil.isEmpty()) cil = "Výlet";
+        if (cil.length() > 60) cil = cil.substring(0, 60);
+
         if (!auto.muzeUjet(km)) {
             posliChybu(ex, 409, "Auto nedojede, dojezd je jen "
                     + String.format("%.1f", auto.getDojezd()) + " km.");
             return;
         }
+        double palivoPred = auto.getNadrz().getAktualniStav();
         auto.vyjed(km);
         autoNaVylete = auto;
+
+        String nazevAuta = auto.getZnacka() + " " + auto.getKaroserie().getZnacka();
+        denik.add(0, new Jizda(nazevAuta, cil, km, palivoPred - auto.getNadrz().getAktualniStav()));
+        if (denik.size() > 20) denik.remove(denik.size() - 1);
+
+        ulozGaraz();
         posliJson(ex, 200, stavGaraze());
     }
 
@@ -148,6 +179,16 @@ public class Server {
         for (int i = 0; i < garaz.getPocetAut(); i++) {
             if (i > 0) sb.append(',');
             sb.append(autoJson(garaz.getAuto(i)));
+        }
+        sb.append("],\"denik\":[");
+        for (int i = 0; i < denik.size(); i++) {
+            Jizda j = denik.get(i);
+            if (i > 0) sb.append(',');
+            sb.append("{\"auto\":").append(str(j.auto()))
+                    .append(",\"cil\":").append(str(j.cil()))
+                    .append(",\"km\":").append(num(j.km()))
+                    .append(",\"litry\":").append(num(j.litry()))
+                    .append('}');
         }
         sb.append("]}");
         return sb.toString();
@@ -167,6 +208,7 @@ public class Server {
                 + ",\"velikostKol\":" + num(a.getKola().getVelikost())
                 + ",\"typKol\":" + str(a.getKola().getTyp())
                 + ",\"barvaKol\":" + str(a.getKola().getBarva())
+                + ",\"najeto\":" + num(a.getNajeto())
                 + ",\"naVylete\":" + (a == autoNaVylete)
                 + "}";
     }
@@ -218,7 +260,8 @@ public class Server {
     }
 
     private static String text(Map<String, String> p, String klic, String nazev) {
-        String hodnota = p.getOrDefault(klic, "").trim();
+        // tabulátory a konce řádků nahradíme mezerou – v souboru oddělují hodnoty
+        String hodnota = p.getOrDefault(klic, "").replaceAll("[\\t\\r\\n]", " ").trim();
         if (hodnota.isEmpty()) throw new ChybaVstupu(nazev + " nesmí být prázdná.");
         if (hodnota.length() > 60) throw new ChybaVstupu(nazev + " je moc dlouhá.");
         return hodnota;
@@ -244,6 +287,53 @@ public class Server {
         } catch (NumberFormatException ignored) {
         }
         throw new ChybaVstupu("Neplatné číslo auta.");
+    }
+
+    // ===================== Ukládání do souboru =====================
+    //
+    // Každé auto je jeden řádek, hodnoty jsou oddělené tabulátorem:
+    // znacka model barva motor spotreba vykon objem palivo velikostKol typKol barvaKol najeto naVylete
+
+    private void ulozGaraz() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < garaz.getPocetAut(); i++) {
+            Auto a = garaz.getAuto(i);
+            sb.append(String.join("\t",
+                    a.getZnacka(), a.getKaroserie().getZnacka(), a.getKaroserie().getBarva(),
+                    a.getMotor().getNazev(), num(a.getMotor().getSpotreba()), num(a.getMotor().getVykon()),
+                    num(a.getNadrz().getObjem()), num(a.getNadrz().getAktualniStav()),
+                    num(a.getKola().getVelikost()), a.getKola().getTyp(), a.getKola().getBarva(),
+                    num(a.getNajeto()), String.valueOf(a == autoNaVylete)))
+                    .append('\n');
+        }
+        try {
+            Files.writeString(souborGaraze, sb.toString(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            IO.println("Garáž se nepodařilo uložit: " + e.getMessage());
+        }
+    }
+
+    private void nactiGaraz() {
+        if (!Files.exists(souborGaraze)) return;
+        try {
+            for (String radek : Files.readAllLines(souborGaraze, StandardCharsets.UTF_8)) {
+                String[] h = radek.split("\t");
+                if (h.length < 13) continue;
+                Auto auto = new Auto(h[0],
+                        new Karoserie(h[1], h[2]),
+                        new Motor(h[3], Double.parseDouble(h[4]), Double.parseDouble(h[5])),
+                        new Nadrz(Double.parseDouble(h[6])),
+                        new Kola(Double.parseDouble(h[8]), h[9], h[10]));
+                auto.getNadrz().natankuj(Double.parseDouble(h[7]));
+                auto.setNajeto(Double.parseDouble(h[11]));
+                if (garaz.pridejAuto(auto) && Boolean.parseBoolean(h[12])) {
+                    autoNaVylete = auto;
+                }
+            }
+            IO.println("Načteno aut ze souboru: " + garaz.getPocetAut());
+        } catch (Exception e) {
+            IO.println("Soubor s garáží se nepodařilo načíst: " + e.getMessage());
+        }
     }
 
     // ===================== Odesílání odpovědí =====================

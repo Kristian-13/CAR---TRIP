@@ -10,7 +10,9 @@ public class WebApp {
 
         // Složka s frontendem (HTML, CSS, JS), jde změnit prvním argumentem.
         String slozka = (args.length > 0) ? args[0] : "public";
-        Server server = new Server(port, slozka);
+        // Garáž se ukládá do souboru garaz.txt vedle složky public.
+        String soubor = java.nio.file.Path.of(slozka).toAbsolutePath().getParent().resolve("garaz.txt").toString();
+        Server server = new Server(port, slozka, soubor);
         server.start();
         IO.println("Server běží na http://localhost:" + port);
     }

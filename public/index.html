@@ -13,28 +13,40 @@
             <p class="podtitul">Garáž, tankování a výlety</p>
         </div>
         <div class="hlavicka-akce">
-            <span id="kapacita" class="kapacita">0 / 5 míst</span>
+            <dl class="statistiky">
+                <div><dt>V garáži</dt><dd id="statAuta">0 / 5</dd></div>
+                <div><dt>Najeto celkem</dt><dd id="statKm">0 km</dd></div>
+            </dl>
             <button id="btnPridat" class="btn btn-hlavni">+ Přidat auto</button>
         </div>
     </header>
 
     <main>
-        <p id="prazdna" class="prazdna" hidden>
-            Garáž je prázdná. Přidej první auto tlačítkem <strong>+ Přidat auto</strong>.
-        </p>
+        <div id="prazdna" class="prazdna" hidden>
+            <p><strong>Garáž je prázdná.</strong></p>
+            <p>Přidej vlastní auto, nebo si naplň garáž ukázkovými auty a rovnou vyraz.</p>
+            <button id="btnUkazka" class="btn">Přidat ukázková auta</button>
+        </div>
+
         <section id="seznam" class="seznam" aria-live="polite"></section>
+
+        <section class="denik">
+            <h2>Deník jízd</h2>
+            <ol id="denik" class="denik-seznam"></ol>
+            <p id="denikPrazdny" class="denik-prazdny">Zatím žádné jízdy. Vyber auto a naplánuj výlet.</p>
+        </section>
     </main>
 
-    <!-- Formulář pro přidání auta -->
+    <!-- ========== Přidání auta ========== -->
     <dialog id="dialogPridat">
-        <form id="formPridat" method="dialog">
+        <form id="formPridat">
             <h2>Nové auto</h2>
 
             <fieldset>
                 <legend>Karoserie</legend>
                 <label>Značka <input name="znacka" required maxlength="60" placeholder="Škoda"></label>
                 <label>Model <input name="model" required maxlength="60" placeholder="Octavia"></label>
-                <label>Barva <input name="barva" required maxlength="60" placeholder="modrá"></label>
+                <label>Barva <input name="barva" required maxlength="60" placeholder="modrá" list="barvy"></label>
             </fieldset>
 
             <fieldset>
@@ -49,28 +61,117 @@
                 <legend>Kola</legend>
                 <label>Velikost (palce) <input name="velikostKol" type="number" step="1" min="1" required placeholder="17"></label>
                 <label>Typ <input name="typKol" required maxlength="60" placeholder="letní"></label>
-                <label>Barva <input name="barvaKol" required maxlength="60" placeholder="stříbrná"></label>
+                <label>Barva <input name="barvaKol" required maxlength="60" placeholder="stříbrná" list="barvy"></label>
             </fieldset>
+
+            <datalist id="barvy">
+                <option value="bílá"><option value="černá"><option value="stříbrná"><option value="šedá">
+                <option value="červená"><option value="modrá"><option value="zelená"><option value="žlutá">
+                <option value="oranžová"><option value="hnědá"><option value="fialová">
+            </datalist>
 
             <p id="chybaFormulare" class="chyba-formulare" hidden></p>
 
             <div class="dialog-akce">
-                <button type="button" id="btnZrusit" class="btn">Zrušit</button>
+                <button type="button" class="btn" data-zavrit>Zrušit</button>
                 <button type="submit" class="btn btn-hlavni">Přidat do garáže</button>
             </div>
         </form>
     </dialog>
 
+    <!-- ========== Plánování výletu ========== -->
+    <dialog id="dialogVylet">
+        <form id="formVylet">
+            <p class="nadpis-maly" id="vyletAuto"></p>
+            <h2>Kam to bude?</h2>
+
+            <div class="cile" id="cile"></div>
+
+            <div class="vlastni-cil">
+                <label>Cíl <input name="cil" maxlength="60" placeholder="např. Babička"></label>
+                <label>Vzdálenost (km) <input name="km" type="number" step="1" min="1" required placeholder="120"></label>
+            </div>
+
+            <div class="predpoved" id="predpoved" hidden>
+                <div class="predpoved-radek"><span>Spotřebuješ</span><strong id="pSpotreba"></strong></div>
+                <div class="predpoved-radek"><span>V nádrži máš</span><strong id="pNadrz"></strong></div>
+                <div class="predpoved-radek"><span>Po cestě zbude</span><strong id="pZbyde"></strong></div>
+                <p class="predpoved-varovani" id="pVarovani" hidden></p>
+            </div>
+
+            <p id="chybaVyletu" class="chyba-formulare" hidden></p>
+
+            <div class="dialog-akce">
+                <button type="button" class="btn" data-zavrit>Zrušit</button>
+                <button type="submit" class="btn btn-hlavni" id="btnVyrazit">Vyrazit</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- ========== Simulace jízdy ========== -->
+    <dialog id="dialogSimulace" class="dialog-simulace">
+        <div class="sim-hlava">
+            <div>
+                <p class="nadpis-maly" id="simAuto"></p>
+                <h2 id="simCil"></h2>
+            </div>
+            <button type="button" class="btn" id="btnPreskocit">Přeskočit</button>
+        </div>
+
+        <div class="scena" id="scena">
+            <div class="vrstva slunce"></div>
+            <div class="vrstva hory" data-rychlost="0.08"></div>
+            <div class="vrstva kopce" data-rychlost="0.25"></div>
+            <div class="vrstva stromy" data-rychlost="0.7"></div>
+            <div class="silnice"><div class="vrstva pruhy" data-rychlost="1"></div></div>
+            <div class="auto-sim" id="autoSim">
+                <svg viewBox="0 0 240 96" aria-hidden="true">
+                    <ellipse cx="120" cy="90" rx="104" ry="5" fill="rgba(0,0,0,.25)"/>
+                    <path class="karoserie" d="M18 70 Q14 54 30 50 L62 46 Q82 22 112 20 L150 20 Q176 22 194 44 L218 50 Q230 54 228 68 L226 74 L18 74 Z"/>
+                    <path d="M74 46 Q90 28 112 27 L128 27 L128 46 Z" fill="#cfe3f5"/>
+                    <path d="M136 27 L150 27 Q170 29 184 46 L136 46 Z" fill="#cfe3f5"/>
+                    <rect x="20" y="56" width="10" height="6" rx="2" fill="#ffd36b"/>
+                    <rect x="216" y="56" width="10" height="6" rx="2" fill="#e5484d"/>
+                    <g class="kolo"><circle cx="62" cy="74" r="16" fill="#1d1f22"/><circle cx="62" cy="74" r="8" fill="#b9bec6"/><path d="M62 66 V82 M54 74 H70" stroke="#1d1f22" stroke-width="2.5"/></g>
+                    <g class="kolo"><circle cx="186" cy="74" r="16" fill="#1d1f22"/><circle cx="186" cy="74" r="8" fill="#b9bec6"/><path d="M186 66 V82 M178 74 H194" stroke="#1d1f22" stroke-width="2.5"/></g>
+                </svg>
+            </div>
+            <p class="sim-udalost" id="simUdalost"></p>
+        </div>
+
+        <div class="trasa">
+            <span>Garáž</span>
+            <div class="trasa-cara"><div class="trasa-ujeto" id="trasaUjeto"></div><div class="trasa-znacka" id="trasaZnacka"></div></div>
+            <span id="trasaCil"></span>
+        </div>
+
+        <dl class="hud">
+            <div><dt>Ujeto</dt><dd><span id="hudUjeto">0</span> <small>km</small></dd></div>
+            <div><dt>Rychlost</dt><dd><span id="hudRychlost">0</span> <small>km/h</small></dd></div>
+            <div><dt>Palivo</dt><dd><span id="hudPalivo">0</span> <small>l</small></dd>
+                <div class="hud-nadrz"><div id="hudNadrz"></div></div></div>
+            <div><dt>Do cíle</dt><dd><span id="hudZbyva">0</span> <small>km</small></dd></div>
+        </dl>
+
+        <div class="sim-souhrn" id="simSouhrn" hidden>
+            <h3 id="souhrnNadpis"></h3>
+            <p id="souhrnText"></p>
+            <button type="button" class="btn btn-hlavni" data-zavrit>Zpět do garáže</button>
+        </div>
+    </dialog>
+
     <div id="zprava" class="zprava" role="status" hidden></div>
 
+    <!-- ========== Šablona karty auta ========== -->
     <template id="sablonaAuta">
         <article class="auto">
             <div class="auto-hlava">
-                <div>
+                <span class="barva-tecka"></span>
+                <div class="auto-titulek">
                     <h3 class="auto-nazev"></h3>
                     <p class="auto-barva"></p>
                 </div>
-                <span class="stitek-vylet" hidden>Na výletě</span>
+                <span class="stitek-vylet" hidden>Naposledy na výletě</span>
             </div>
 
             <dl class="auto-parametry">
@@ -78,6 +179,8 @@
                 <div><dt>Výkon</dt><dd class="p-vykon"></dd></div>
                 <div><dt>Spotřeba</dt><dd class="p-spotreba"></dd></div>
                 <div><dt>Kola</dt><dd class="p-kola"></dd></div>
+                <div><dt>Tachometr</dt><dd class="p-najeto"></dd></div>
+                <div><dt>Dojezd</dt><dd class="p-dojezd"></dd></div>
             </dl>
 
             <div class="nadrz">
@@ -86,19 +189,18 @@
                     <span class="nadrz-stav"></span>
                 </div>
                 <div class="nadrz-ukazatel"><div class="nadrz-hladina"></div></div>
-                <p class="dojezd"></p>
             </div>
 
             <form class="akce akce-tankovani">
                 <input name="litry" type="number" step="0.1" min="0.1" placeholder="litry" required aria-label="Kolik litrů natankovat">
                 <button class="btn">Natankovat</button>
-            </form>
-            <form class="akce akce-vylet">
-                <input name="km" type="number" step="1" min="1" placeholder="km" required aria-label="Vzdálenost výletu v km">
-                <button class="btn btn-hlavni">Vyjet na výlet</button>
+                <button type="button" class="btn btn-plna">Do plna</button>
             </form>
 
-            <button class="btn-odstranit">Odstranit z garáže</button>
+            <div class="auto-pata">
+                <button class="btn btn-hlavni btn-vylet">Naplánovat výlet</button>
+                <button class="btn-odstranit">Odstranit</button>
+            </div>
         </article>
     </template>
 

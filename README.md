@@ -14,6 +14,14 @@ Běží buď v konzoli, nebo jako webová aplikace (Java backend + HTML/JS front
 **Auto**
 - vyjet na výlet – spočítá spotřebu a dojezd; když auto nedojede, nabídne natankování
 - zkontrolovat nádrž auta, které je na výletě
+- tachometr – kolik km auto celkem ujelo
+
+**Navíc ve webové verzi**
+- plánovač výletu s oblíbenými cíli a předpovědí spotřeby (když palivo nestačí, dotankuje s rezervou)
+- animovaná simulace jízdy – krajina, rychlost, ubývající palivo a ujeté km živě, na konci souhrn
+- deník posledních jízd
+- tankování „do plna“ a ukázková auta pro rychlé vyzkoušení
+- garáž se ukládá do souboru `garaz.txt`, takže po restartu serveru auta nezmizí
 
 ## Struktura
 
@@ -53,10 +61,10 @@ Server posílá prohlížeči soubory ze složky `public` a na adresách `/api/.
 | POST   | `/api/auta`                   | přidá auto                     |
 | DELETE | `/api/auta/{cislo}`           | odstraní auto                  |
 | POST   | `/api/auta/{cislo}/tankovani` | natankuje (parametr `litry`)   |
-| POST   | `/api/auta/{cislo}/vylet`     | vyjede na výlet (parametr `km`)|
+| POST   | `/api/auta/{cislo}/vylet`     | vyjede na výlet (parametry `km`, `cil`)|
 
 Chyby (např. „Auto nedojede“) vrací server jako `{"chyba": "..."}` a frontend je ukáže.
-Data jsou jen v paměti, takže po restartu serveru je garáž prázdná.
+Auta se ukládají do souboru `garaz.txt` (deník jízd je jen v paměti).
 
 ## Spuštění
 

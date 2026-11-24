@@ -8,6 +8,7 @@ public class Auto {
     private Motor motor;
     private Nadrz nadrz;
     private Kola kola;
+    private double najeto; // tachometr – kolik km auto celkem ujelo
 
     public Auto(String znacka, Karoserie model, Motor motor, Nadrz nadrz, Kola kola) {
         this.znacka = znacka;
@@ -45,8 +46,26 @@ public class Auto {
         return getDojezd() >= km;
     }
 
+    public double getNajeto() {
+        return najeto;
+    }
+
+    // Používá se při načítání uložené garáže ze souboru.
+    public void setNajeto(double najeto) {
+        if (najeto >= 0) {
+            this.najeto = najeto;
+        }
+    }
+
+    public double spotrebaNaTrase(double km) {
+        return motor.getSpotreba() * km / 100;
+    }
+
     public void vyjed(double km) {
-        double spotrebovano = motor.getSpotreba() * km / 100;
-        nadrz.odeberPalivo(spotrebovano);
+        if (km <= 0) {
+            return;
+        }
+        nadrz.odeberPalivo(spotrebaNaTrase(km));
+        najeto += km;
     }
 }
