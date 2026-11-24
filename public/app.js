@@ -105,9 +105,10 @@ function vytvorKartu(auto, index) {
             `${auto.znacka} ${auto.model}: nádrž je plná.`);
     });
     najdi(".btn-vylet").addEventListener("click", () => otevriPlanovac(index));
-    najdi(".btn-odstranit").addEventListener("click", () => {
-        if (confirm(`Opravdu odstranit ${auto.znacka} ${auto.model}?`)) {
-            proved(api("DELETE", `/auta/${index}`), "Auto odstraněno.");
+    najdi(".btn-odstranit").addEventListener("click", async () => {
+        const nazev = `${auto.znacka} ${auto.model}`;
+        if (await potvrd("Odstranit auto?", `${nazev} zmizí z garáže. Tohle nejde vrátit.`)) {
+            proved(api("DELETE", `/auta/${index}`), `${nazev} odstraněno.`);
         }
     });
 
@@ -134,6 +135,17 @@ async function proved(pozadavek, textUspechu) {
     } catch (chyba) {
         ukazZpravu(chyba.message, true);
     }
+}
+
+// Vlastní potvrzovací okno – vrací Promise s true (Odstranit) nebo false (Zrušit / Esc)
+function potvrd(nadpis, text) {
+    const dialog = $("dialogPotvrdit");
+    $("potvrditNadpis").textContent = nadpis;
+    $("potvrditText").textContent = text;
+    dialog.returnValue = "";
+    dialog.showModal();
+    return new Promise((odpoved) =>
+        dialog.addEventListener("close", () => odpoved(dialog.returnValue === "ano"), { once: true }));
 }
 
 let casovacZpravy;

@@ -160,6 +160,18 @@
         </div>
     </dialog>
 
+    <!-- ========== Potvrzení (místo confirm(), které některé prohlížeče blokují) ========== -->
+    <dialog id="dialogPotvrdit" class="dialog-potvrdit">
+        <form method="dialog">
+            <h2 id="potvrditNadpis"></h2>
+            <p id="potvrditText"></p>
+            <div class="dialog-akce">
+                <button value="ne" class="btn">Zrušit</button>
+                <button value="ano" class="btn btn-nebezpecne">Odstranit</button>
+            </div>
+        </form>
+    </dialog>
+
     <div id="zprava" class="zprava" role="status" hidden></div>
 
     <!-- ========== Šablona karty auta ========== -->

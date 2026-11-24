@@ -273,6 +273,18 @@ input:focus {
 
 .btn-hlavni:hover { background: var(--akcent-tmavy); }
 
+.btn-nebezpecne {
+    background: var(--chyba);
+    border-color: var(--chyba);
+    color: #fff;
+}
+
+.btn-nebezpecne:hover { background: #a83131; }
+
+.dialog-potvrdit { width: min(400px, calc(100vw - 32px)); }
+.dialog-potvrdit h2 { margin-bottom: 8px; }
+.dialog-potvrdit p { margin: 0 0 20px; color: var(--tlumeny); line-height: 1.5; }
+
 .btn:disabled {
     opacity: 0.45;
     cursor: not-allowed;
